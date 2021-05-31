@@ -61,7 +61,7 @@ class Hikvision:
     def set_device_settings(self, codec, resolution, fps, audio_codec):
       #  device_capabilities = get_device_capabilities()
       #  device_setting = device_settings.device_config
-       # return device_setting
+      # return device_setting
        pass
 
     def set_image_settings(self):
