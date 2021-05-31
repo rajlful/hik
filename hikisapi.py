@@ -39,7 +39,7 @@ class Hikvision:
         all_device_info = xmltodict.parse(device_info.text)
         return all_device_info['DeviceInfo']['model']
     
-    def get_device_capabilities(self, stream=const.MAIN):  #101 - основной поток камеры. 102 - субпоток
+    def get_device_capabilities(self, stream='101'):  #101 - основной поток камеры. 102 - субпоток
         
         device_capabilities = requests.get(f'http://{self.ipaddr}:{self.port}/ISAPI/Streaming/channels/{stream}/capabilities',
                                auth=HTTPDigestAuth(self.user, self.paswd))
