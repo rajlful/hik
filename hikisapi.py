@@ -1,9 +1,8 @@
 import requests
 from requests.auth import HTTPDigestAuth
 import xmltodict
-import device_settings
+from http import HTTPStatus
 import const
-import rtsp
 
 class Hikvision:
 
@@ -13,44 +12,55 @@ class Hikvision:
         self.user = user
         self.paswd = paswd
         self.port = port
-        device_status = requests.get(f'http://{self.ipaddr}:{self.port}/ISAPI/System/status',
-                               auth=HTTPDigestAuth(self.user, self.paswd)).status_code
-        if device_status == 400: 
-            raise ConnectionError("Bad request")
-        elif device_status == 401:
-            raise ConnectionError("Unauthorized")
-        elif device_status == 403:
-            raise ConnectionError("Forbidden")
-        elif device_status == 404:
-            raise ConnectionError("Not Found")
-        elif device_status == 500:
-            raise ConnectionError("Internal Server Error")
-        elif device_status == 501:
-            raise ConnectionError("Not Implemented")
+         
     
     def __repr__(self):
         
         return f"<Device adress: {self.ipaddr}, user: {self.user}, password: {self.paswd}, port: {self.port}>"
 
+    def __sent_request(self, method, path):
+        
+        HOST = f'http://{self.ipaddr}:{self.port}/ISAPI'
+        method = getattr(requests, method) 
+        incoming_request = method(f'{HOST}{path}', auth=HTTPDigestAuth(self.user, self.paswd))
+        return incoming_request
+        
+    def check_device_status(self):
+        
+        device_status = self.__sent_request('get', '/System/status').status_code
+        if device_status == HTTPStatus.OK:
+            return 'OK'
+        elif device_status == HTTPStatus.BAD_REQUEST: 
+            raise ConnectionError("Bad request")
+        elif device_status == HTTPStatus.UNAUTHORIZED:
+            raise ConnectionError("Unauthorized")
+        elif device_status == HTTPStatus.FORBIDDEN:
+            raise ConnectionError("Forbidden")
+        elif device_status == HTTPStatus.NOT_FOUND:
+            raise ConnectionError("Not Found")
+        elif device_status == HTTPStatus.INTERNAL_SERVER_ERROR:
+            raise ConnectionError("Internal Server Error")
+        elif device_status == HTTPStatus.NOT_IMPLEMENTED:
+            raise ConnectionError("Not Implemented")
+
     def get_model_name(self):
         
-        device_info = requests.get(f'http://{self.ipaddr}:{self.port}/ISAPI/System/deviceinfo',
-                               auth=HTTPDigestAuth(self.user, self.paswd))
+        device_info = self.__sent_request('get','/System/deviceinfo')
         all_device_info = xmltodict.parse(device_info.text)
         return all_device_info['DeviceInfo']['model']
     
-    def get_device_capabilities(self, stream='101'):  #101 - основной поток камеры. 102 - субпоток
+    def get_device_capabilities(self, stream=const.MAIN):  #MAIN - основной поток камеры. SUB - субпоток
         
-        device_capabilities = requests.get(f'http://{self.ipaddr}:{self.port}/ISAPI/Streaming/channels/{stream}/capabilities',
-                               auth=HTTPDigestAuth(self.user, self.paswd))
-        dict_with_all_capabilities = xmltodict.parse(device_capabilities.text)
+        device_capabilities = self.__sent_request('get', f'/Streaming/channels/{stream}/capabilities')
+        device_capabilities = xmltodict.parse(device_capabilities.text)
         # берем из полученной xml только нужные параметры
-        width = dict_with_all_capabilities['StreamingChannel']['Video']['videoResolutionWidth']['@opt'].split(',')
-        height = dict_with_all_capabilities['StreamingChannel']['Video']['videoResolutionHeight']['@opt'].split(',')
+        capabilities = device_capabilities['StreamingChannel']['Video']
+        width = capabilities['videoResolutionWidth']['@opt'].split(',')
+        height = capabilities['videoResolutionHeight']['@opt'].split(',')
         resolutions = [[w + 'x' + h] for w, h in zip(width, height)]  # чтобы разрешение было в понятном виде
-        fps = dict_with_all_capabilities['StreamingChannel']['Video']['maxFrameRate']['@opt'].split(',')
-        codecs = dict_with_all_capabilities['StreamingChannel']['Video']['videoCodecType']['@opt'].split(',')
-        audio_codecs = dict_with_all_capabilities['StreamingChannel']['Audio']['audioCompressionType']['@opt'].split(',')
+        fps = capabilities['maxFrameRate']['@opt'].split(',')
+        codecs = capabilities['videoCodecType']['@opt'].split(',')
+        audio_codecs = device_capabilities['StreamingChannel']['Audio']['audioCompressionType']['@opt'].split(',')
         dict_with_useful_capabilities = { 'resolutions' : resolutions,
                                           'codecs' : codecs,
                                           'fps' : fps,
@@ -61,7 +71,7 @@ class Hikvision:
     def set_device_settings(self, codec, resolution, fps, audio_codec):
       #  device_capabilities = get_device_capabilities()
       #  device_setting = device_settings.device_config
-      # return device_setting
+       # return device_setting
        pass
 
     def set_image_settings(self):
@@ -80,17 +90,16 @@ class Hikvision:
         pass
 
     def restore_to_default(self):
-        restoring = requests.put(f'http://{self.ipaddr}:{self.port}/ISAPI/System/factoryReset',
-                               auth=HTTPDigestAuth(self.user, self.paswd))
-        if restoring.status_code == 200:
+        restoring = self.__sent_request('put', '/System/factoryReset')
+                               
+        if restoring.status_code == HTTPStatus.OK:
             return "Устройство сбрасывается до заводских настроек. Не перезагружайте камеру."
         else:
             return f"Что-то пошло не так. Камера вернула {restoring.status_code}"
 
     def reboot(self):
-        rebooting = requests.put(f'http://{self.ipaddr}:{self.port}/ISAPI/System/reboot',
-                               auth=HTTPDigestAuth(self.user, self.paswd))
-        if rebooting.status_code == 200:
+        rebooting = self.__sent_request('put','/System/reboot')
+        if rebooting.status_code == HTTPStatus.OK:
             return "Устройство перезагружается"
         else:
             return f"Что-то пошло не так. Камера вернула {rebooting.status_code}"
@@ -102,8 +111,7 @@ class Hikvision:
         pass
 
     def get_device_config(self):
-        device_config = requests.get(f'http://{self.ipaddr}:{self.port}/ISAPI/System/configurationData',
-                                         auth=HTTPDigestAuth(self.user, self.paswd))
+        device_config = self.__sent_request('get','/System/configurationData')
         with open('configuration_data', 'wb') as config:
             config.write(device_config.content)
         return 'Конфигурация скопирована'
@@ -117,7 +125,7 @@ class Hikvision:
 
 if __name__ == "__main__":
     a = Hikvision('172.16.13.70', 'admin', 'Admin321678')
+    print(a.get_device_capabilities())
     #print(a.get_device_capabilities())
-    #print(a.set_device_settings('h.264'))
     
     
