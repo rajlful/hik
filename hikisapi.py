@@ -4,7 +4,6 @@ import xmltodict
 from http import HTTPStatus
 import const
 import settings
-import socket
 
 class Hikvision:
 
@@ -107,7 +106,7 @@ class Hikvision:
         datetime_settings['Time']['localTime'] = user_date_time
         our_time_settings = xmltodict.unparse(datetime_settings)
         self.__send_request('put', f'/System/time', our_time_settings)
-        return our_time_settings
+        return 'Время успешно изменено'
             
     def set_datetime_by_ntp(self):
         pass
@@ -135,16 +134,16 @@ class Hikvision:
         return "Устройство перезагружается"
         
     def get_events(self):
+       
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')   
         events = self.__send_request('get', '/Event/notification/alertStream', stream=True)
         for event in events.iter_lines():
-            decoded_event = event
+            decoded_event = event.decode('utf-8')
             print(decoded_event)
       
-       
-
+    
     def get_device_config(self):
        
         status = self.is_device_status_ok()
@@ -166,7 +165,7 @@ class Hikvision:
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
     #print(a.set_device_settings('H.264', '1280x720', '2000'))
-    a.get_events()
+    #a.get_events()
     #print(a.get_model_name())
     #print(settings.time_settings)
-    #print(a.set_datetime_manual('2021-07-04T16:06:12'))
+    print(a.set_datetime_manual('2021-07-04T16:06:12'))
