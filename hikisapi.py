@@ -4,6 +4,7 @@ import xmltodict
 from http import HTTPStatus
 import const
 import settings
+import logging
 
 class Hikvision:
 
@@ -28,19 +29,17 @@ class Hikvision:
     def is_device_status_ok(self):
         
         device_status = self.__send_request('get', '/System/status').status_code
+        logger = logging.getLogger('camera_return')
+        logger.setLevel(logging.DEBUG)
+        file_log = logging.FileHandler('hikisapi_log.txt')
+        file_log.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_log.setFormatter(formatter)
+        logger.addHandler(file_log)
+        logger.debug(f'Response {device_status}')
         if device_status == HTTPStatus.OK:
             return True
-        elif device_status == HTTPStatus.BAD_REQUEST: 
-            return False
-        elif device_status == HTTPStatus.UNAUTHORIZED:
-            return False
-        elif device_status == HTTPStatus.FORBIDDEN:
-            return False
-        elif device_status == HTTPStatus.NOT_FOUND:
-            return False
-        elif device_status == HTTPStatus.INTERNAL_SERVER_ERROR:
-            return False
-        elif device_status == HTTPStatus.NOT_IMPLEMENTED:
+        else:
             return False
 
     def get_model_name(self):
