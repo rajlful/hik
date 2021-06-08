@@ -20,10 +20,10 @@ class Hikvision:
         
         return f"<Device adress: {self.ipaddr}, user: {self.user}, password: {self.paswd}, port: {self.port}>"
 
-    def __send_request(self, method, path, data=None, timeout=None):
+    def __send_request(self, method, path, data=None, timeout=None, stream=None):
                 
         method = getattr(requests, method) 
-        incoming_request = method(f'{self.HOST}{path}', auth=HTTPDigestAuth(self.user, self.paswd), data=data, timeout=timeout)
+        incoming_request = method(f'{self.HOST}{path}', auth=HTTPDigestAuth(self.user, self.paswd), data=data, timeout=timeout, stream=stream)
         return incoming_request
         
     def is_device_status_ok(self):
@@ -123,7 +123,7 @@ class Hikvision:
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')
-        restoring = self.__send_request('put', '/System/factoryReset')
+        self.__send_request('put', '/System/factoryReset')
         return "Устройство сбрасывается до заводских настроек. Не перезагружайте камеру."
         
     def reboot(self):
@@ -131,23 +131,17 @@ class Hikvision:
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')    
-        rebooting = self.__send_request('put','/System/reboot')
+        self.__send_request('put','/System/reboot')
         return "Устройство перезагружается"
         
     def get_events(self):
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')   
-        addr = ('172.16.13.70', 80)
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect(addr)
-        data = client_socket.recv(512)
-        print(data)
-        while status:
-            alertstream = self.__send_request('get', '/Event/notification/alertStream',  timeout=10)
-            print(alertstream)
-            print(alertstream.text)
-       
+        events = self.__send_request('get', '/Event/notification/alertStream', stream=True)
+        for event in events.iter_lines():
+            decoded_event = event
+            print(decoded_event)
       
        
 
