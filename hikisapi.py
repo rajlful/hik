@@ -124,23 +124,16 @@ class Hikvision:
         if not status:
             raise ValueError('Error, more info in logs')
         restoring = self.__send_request('put', '/System/factoryReset')
-        if restoring.status_code == HTTPStatus.OK:
-            return "Устройство сбрасывается до заводских настроек. Не перезагружайте камеру."
-        else:
-            return f"Что-то пошло не так. Камера вернула {restoring.status_code}"
-
+        return "Устройство сбрасывается до заводских настроек. Не перезагружайте камеру."
+        
     def reboot(self):
 
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')    
         rebooting = self.__send_request('put','/System/reboot')
-        if rebooting.status_code == HTTPStatus.OK:
-            return "Устройство перезагружается"
-        else:
-            return f"Что-то пошло не так. Камера вернула {rebooting.status_code}"
+        return "Устройство перезагружается"
         
-    
     def get_events(self):
         status = self.is_device_status_ok()
         if not status:
