@@ -21,40 +21,40 @@ class Hikvision:
 
     def __send_request(self, method, path, data=None):
                 
-        method = getattr(requests, method, data) 
+        method = getattr(requests, method) 
         incoming_request = method(f'{self.HOST}{path}', auth=HTTPDigestAuth(self.user, self.paswd), data=data)
         return incoming_request
         
-    def check_device_status(self):
+    def is_device_status_ok(self):
         
         device_status = self.__send_request('get', '/System/status').status_code
         if device_status == HTTPStatus.OK:
-            return HTTPStatus.OK
+            return True
         elif device_status == HTTPStatus.BAD_REQUEST: 
-            raise ConnectionError("Bad request")
+            return False
         elif device_status == HTTPStatus.UNAUTHORIZED:
-            raise ConnectionError("Unauthorized")
+            return False
         elif device_status == HTTPStatus.FORBIDDEN:
-            raise ConnectionError("Forbidden")
+            return False
         elif device_status == HTTPStatus.NOT_FOUND:
-            raise ConnectionError("Not Found")
+            return False
         elif device_status == HTTPStatus.INTERNAL_SERVER_ERROR:
-            raise ConnectionError("Internal Server Error")
+            return False
         elif device_status == HTTPStatus.NOT_IMPLEMENTED:
-            raise ConnectionError("Not Implemented")
+            return False
 
     def get_model_name(self):
 
-        if self.check_device_status() == HTTPStatus.OK:
+        if self.is_device_status_ok() == True:
             device_info = self.__send_request('get','/System/deviceinfo')
             all_device_info = xmltodict.parse(device_info.text)
             return all_device_info['DeviceInfo']['model']
-        else:
-            return self.check_device_status()
+        if self.is_device_status_ok() == False:
+            return self.is_device_status_ok()
     
     def get_device_capabilities(self, stream=const.MAIN):  #MAIN - основной поток камеры. SUB - субпоток
         
-        if self.check_device_status() == HTTPStatus.OK:
+        if self.is_device_status_ok() == True:
             device_capabilities = self.__send_request('get', f'/Streaming/channels/{stream}/capabilities')
             device_capabilities = xmltodict.parse(device_capabilities.text)
             # берем из полученной xml только нужные параметры
@@ -66,17 +66,17 @@ class Hikvision:
             codecs = capabilities['videoCodecType']['@opt'].split(',')
             audio_codecs = device_capabilities['StreamingChannel']['Audio']['audioCompressionType']['@opt'].split(',')
             useful_capabilities = { 'resolutions' : resolutions,
-                                              'codecs' : codecs,
-                                              'fps' : fps,
-                                              'audio_codecs' : audio_codecs
-                                            }
+                                    'codecs' : codecs,
+                                    'fps' : fps,
+                                    'audio_codecs' : audio_codecs
+                                    }
             return useful_capabilities
-        else:
-            return self.check_device_status()   
+        if self.is_device_status_ok() == False:
+            return self.is_device_status_ok()   
     
     def set_device_settings(self, codec, resolution, fps, stream=const.MAIN):
         
-        if self.check_device_status() == HTTPStatus.OK:
+        if self.is_device_status_ok() == True:
             width, height = resolution.split('x')
             default_settings = xmltodict.parse(settings.device_settings)
             inside_xml_video = default_settings['StreamingChannel']['Video']
@@ -87,8 +87,8 @@ class Hikvision:
             our_settings = xmltodict.unparse(default_settings).replace('\n','')   # unparse возвращает xml c \n в запросе. Такой запрос камера не принимает
             self.__send_request('put', f'/Streaming/channels/{stream}/', our_settings)
             return 'Настройки успешно применились'
-        else:
-            return self.check_device_status() 
+        if self.is_device_status_ok() == False:
+            return self.is_device_status_ok() 
 
     def set_image_settings(self):
         pass
@@ -98,14 +98,14 @@ class Hikvision:
 
     def set_datetime_manual(self, user_date_time):
         
-        if self.check_device_status() == HTTPStatus.OK:
+        if self.is_device_status_ok() == True:
             datetime_settings = xmltodict.parse(settings.time_settings)
             datetime_settings['Time']['localTime'] = user_date_time
             our_time_settings = xmltodict.unparse(datetime_settings)
             self.__send_request('put', f'/System/time', our_time_settings)
             return our_time_settings
-        else:
-            return self.check_device_status()
+        if self.is_device_status_ok() == False:
+            return self.is_device_status_ok()
             
     def set_datetime_by_ntp(self):
         pass
@@ -118,25 +118,25 @@ class Hikvision:
 
     def restore_to_default(self):
 
-        if self.check_device_status() == HTTPStatus.OK:
+        if self.is_device_status_ok() == True:
             restoring = self.__send_request('put', '/System/factoryReset')
             if restoring.status_code == HTTPStatus.OK:
                 return "Устройство сбрасывается до заводских настроек. Не перезагружайте камеру."
             else:
                 return f"Что-то пошло не так. Камера вернула {restoring.status_code}"
-        else:
-            self.check_device_status() 
+        if self.is_device_status_ok() == False:
+            return self.is_device_status_ok() 
 
     def reboot(self):
 
-        if self.check_device_status() == HTTPStatus.OK:    
+        if self.is_device_status_ok() == True:    
             rebooting = self.__send_request('put','/System/reboot')
             if rebooting.status_code == HTTPStatus.OK:
                 return "Устройство перезагружается"
             else:
                 return f"Что-то пошло не так. Камера вернула {rebooting.status_code}"
-        else:
-            self.check_device_status() 
+        if self.is_device_status_ok() == False:
+            return self.is_device_status_ok() 
         
     
     def get_events(self):
@@ -147,13 +147,13 @@ class Hikvision:
 
     def get_device_config(self):
        
-        if self.check_device_status() == HTTPStatus.OK:    
+        if self.is_device_status_ok() == True:    
             device_config = self.__send_request('get','/System/configurationData')
             with open('configuration_data', 'wb') as config:
                 config.write(device_config.content)
             return 'Конфигурация скопирована'
-        else:
-            self.check_device_status() 
+        if self.is_device_status_ok() == False:
+            return self.is_device_status_ok()
         
 
     def set_device_config(self):
@@ -166,7 +166,7 @@ class Hikvision:
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
     #print(a.set_device_settings('H.264', '1280x720', '2000'))
-    #print(a.get_device_capabilities())
-    #print(a.get_model_name())
+    print(a.get_device_capabilities())
+    print(a.get_model_name())
     #print(settings.time_settings)
-    print(a.set_datetime_manual('2021-07-04T16:06:12'))
+    #print(a.set_datetime_manual('2021-07-04T16:06:12'))
