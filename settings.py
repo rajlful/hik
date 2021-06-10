@@ -42,3 +42,21 @@ ntp_settings = '''<NTPServer>
 <synchronizeInterval>1440</synchronizeInterval>
 </NTPServer>
 '''
+
+network_settings = """<NetworkInterface>
+<id>1</id>
+<IPAddress>
+<ipVersion>dual</ipVersion>
+<addressingType>static</addressingType>
+<ipAddress>192.168.1.155</ipAddress>
+<subnetMask>255.255.255.0</subnetMask>
+<ipV6AddressingType>ra</ipV6AddressingType>
+<DefaultGateway><ipAddress>192.168.1.1</ipAddress></DefaultGateway>
+<PrimaryDNS><ipAddress>172.16.2.1</ipAddress>
+</PrimaryDNS><SecondaryDNS><ipAddress>8.8.8.8</ipAddress></SecondaryDNS>
+</IPAddress><Link><MACAddress>44:19:b7:11:d6:fb</MACAddress>
+<autoNegotiation>true</autoNegotiation>
+<speed>0</speed><duplex>full</duplex
+><MTU>1500</MTU>
+</Link>
+</NetworkInterface>"""

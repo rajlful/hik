@@ -2,23 +2,24 @@ import requests
 from requests.auth import HTTPDigestAuth
 import xmltodict
 from http import HTTPStatus
+
 import const
 import settings
-import logging
+import hiklogger
 
 class Hikvision:
 
-    def __init__(self, ipaddr, user='admin', paswd='Admin1337', port=80):
+    def __init__(self, ip_address, user='admin', paswd='Admin1337', port=80):
         
-        self.ipaddr = ipaddr
+        self.ip_address = ip_address
         self.user = user
         self.paswd = paswd
         self.port = port
-        self.HOST = f'http://{self.ipaddr}:{self.port}/ISAPI' 
+        self.HOST = f'http://{self.ip_address}:{self.port}/ISAPI' 
     
     def __repr__(self):
         
-        return f"<Device adress: {self.ipaddr}, user: {self.user}, password: {self.paswd}, port: {self.port}>"
+        return f"<Device adress: {self.ip_address}, user: {self.user}, password: {self.paswd}, port: {self.port}>"
 
     def __send_request(self, method, path, data=None, timeout=None, stream=None):
                 
@@ -29,18 +30,8 @@ class Hikvision:
     def is_device_status_ok(self):
         
         device_status = self.__send_request('get', '/System/status').status_code
-        logger = logging.getLogger('camera_return')
-        logger.setLevel(logging.DEBUG)
-        file_log = logging.FileHandler('hikisapi_log.txt')
-        file_log.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_log.setFormatter(formatter)
-        logger.addHandler(file_log)
-        logger.debug(f'Response {device_status}')
-        if device_status == HTTPStatus.OK:
-            return True
-        else:
-            return False
+        hiklogger.logger.debug(f'Response {device_status}')
+        return device_status == HTTPStatus.OK
 
     def get_model_name(self):
 
@@ -92,8 +83,11 @@ class Hikvision:
         
     def set_image_settings(self):
         pass
+    
+    def get_network_settings(self):
+        pass
 
-    def set_network_settings(self):
+    def set_network_settings(self, ip_adress, mask, gateway, dns):
         pass
 
     def set_datetime_manual(self, user_date_time):
@@ -140,7 +134,7 @@ class Hikvision:
         events = self.__send_request('get', '/Event/notification/alertStream', stream=True)
         for event in events.iter_lines():
             decoded_event = event.decode('utf-8')
-            print(decoded_event)
+            hiklogger.event_logger.info(decoded_event)
       
     
     def get_device_config(self):
@@ -148,7 +142,13 @@ class Hikvision:
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')   
-        device_config = self.__send_request('get','/System/configurationData')
+        return self.__send_request('get','/System/configurationData')
+        
+    def save_device_config(self):    
+        status = self.is_device_status_ok()
+        if not status:
+            raise ValueError('Error, more info in logs')   
+        device_config = self.get_device_config()
         with open('configuration_data', 'wb') as config:
             config.write(device_config.content)
         return 'Конфигурация скопирована'
@@ -164,7 +164,8 @@ class Hikvision:
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
     #print(a.set_device_settings('H.264', '1280x720', '2000'))
-    #a.get_events()
+    a.save_device_config()
     #print(a.get_model_name())
     #print(settings.time_settings)
-    print(a.set_datetime_manual('2021-07-04T16:06:12'))
+    #print(a.set_network_settings('172.16.13.70','255.255.255.0', '172.16.13.1', '8.8.8.8'))
+    #print(a.get_device_capabilities())
