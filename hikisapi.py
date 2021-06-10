@@ -134,7 +134,11 @@ class Hikvision:
         events = self.__send_request('get', '/Event/notification/alertStream', stream=True)
         for event in events.iter_lines():
             decoded_event = event.decode('utf-8')
-            hiklogger.event_logger.info(decoded_event)
+            if 'eventType' in decoded_event:
+                hiklogger.event_logger.info(decoded_event)
+            #if 'dateTime' or 'eventType' in decoded_event:
+               # print(decoded_event)
+            
       
     
     def get_device_config(self):
@@ -153,7 +157,6 @@ class Hikvision:
             config.write(device_config.content)
         return 'Конфигурация скопирована'
         
-
     def set_device_config(self):
         pass
 
@@ -164,7 +167,7 @@ class Hikvision:
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
     #print(a.set_device_settings('H.264', '1280x720', '2000'))
-    a.save_device_config()
+    a.get_events()
     #print(a.get_model_name())
     #print(settings.time_settings)
     #print(a.set_network_settings('172.16.13.70','255.255.255.0', '172.16.13.1', '8.8.8.8'))
