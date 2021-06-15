@@ -1,6 +1,6 @@
-ipaddr='172.16.13.70'
+ipaddr='192.168.1.155'
 user='admin' 
-paswd='Admin321678' 
+paswd='Admin1337' 
 port=80
 
 device_settings = """ 
@@ -53,10 +53,31 @@ network_settings = """<NetworkInterface>
 <ipV6AddressingType>ra</ipV6AddressingType>
 <DefaultGateway><ipAddress>192.168.1.1</ipAddress></DefaultGateway>
 <PrimaryDNS><ipAddress>172.16.2.1</ipAddress>
-</PrimaryDNS><SecondaryDNS><ipAddress>8.8.8.8</ipAddress></SecondaryDNS>
-</IPAddress><Link><MACAddress>44:19:b7:11:d6:fb</MACAddress>
+</PrimaryDNS><SecondaryDNS><ipAddress>8.8.8.8</ipAddress>
+</SecondaryDNS>
+</IPAddress>
+<Link><MACAddress>44:19:b7:11:d6:fb</MACAddress>
 <autoNegotiation>true</autoNegotiation>
 <speed>0</speed><duplex>full</duplex
 ><MTU>1500</MTU>
 </Link>
 </NetworkInterface>"""
+
+md_settings = """<MotionDetection>
+<enabled>true</enabled>
+<enableHighlight>false</enableHighlight>
+<samplingInterval>2</samplingInterval>
+<startTriggerTime>500</startTriggerTime>
+<endTriggerTime>500</endTriggerTime>
+<regionType>grid</regionType>
+<Grid>
+<rowGranularity>18</rowGranularity>
+<columnGranularity>22</columnGranularity>
+</Grid>
+<MotionDetectionLayout version="2.0">
+<sensitivityLevel>100</sensitivityLevel>
+<layout>
+<gridMap>fffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffcfffffc</gridMap>
+</layout>
+</MotionDetectionLayout>
+</MotionDetection>"""

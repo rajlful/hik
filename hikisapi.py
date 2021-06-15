@@ -15,7 +15,7 @@ class Hikvision:
         self.user = user
         self.paswd = paswd
         self.port = port
-        self.HOST = f'http://{self.ip_address}:{self.port}/ISAPI' 
+        self.HOST = f'http://{self.ip_address}:{self.port}/ISAPI'
     
     def __repr__(self):
         
@@ -41,8 +41,7 @@ class Hikvision:
         device_info = self.__send_request('get','/System/deviceinfo')
         all_device_info = xmltodict.parse(device_info.text)
         return all_device_info['DeviceInfo']['model']
-        
-    
+            
     def get_device_capabilities(self, stream=const.MAIN):  #MAIN - основной поток камеры. SUB - субпоток
         
         status = self.is_device_status_ok()
@@ -85,10 +84,39 @@ class Hikvision:
         pass
     
     def get_network_settings(self):
-        pass
+        status = self.is_device_status_ok()
+        if not status:
+            raise ValueError('Error, more info in logs')
+        network_settings = xmltodict.parse(self.__send_request('get', '/System/Network/interfaces/1/ipAddress').text)
+        inside_network_settings = network_settings['IPAddress']
+        ip_adress = inside_network_settings['ipAddress']
+        mask = inside_network_settings['subnetMask']
+        gateway = inside_network_settings['DefaultGateway']['ipAddress'] 
+        primary_dns = inside_network_settings['PrimaryDNS']['ipAddress']
+        return {'ip': ip_adress, 'mask': mask, 'gateway': gateway, 'primary_dns': primary_dns}
 
     def set_network_settings(self, ip_adress, mask, gateway, dns):
-        pass
+        status = self.is_device_status_ok()
+        if not status:
+            raise ValueError('Error, more info in logs')
+        network_settings = xmltodict.parse(settings.network_settings)
+        inside_network_settings = network_settings['NetworkInterface']['IPAddress']
+        inside_network_settings['ipAddress'] = ip_adress
+        inside_network_settings['subnetMask'] = mask
+        inside_network_settings['DefaultGateway']['ipAddress'] = gateway
+        inside_network_settings['PrimaryDNS']['ipAddress'] = dns
+        our_network_settings = xmltodict.unparse(network_settings)
+        self.__send_request('put', '/System/Network/interfaces/1/ipAddress', data=our_network_settings)
+        return 'Настройки успешно применились'
+
+    def get_rtsp_url(self):
+        status = self.is_device_status_ok()
+        if not status:
+            raise ValueError('Error, more info in logs')
+        device_ports = xmltodict.parse(self.__send_request('get', '/Security/adminAccesses').text)
+        rtsp_port = device_ports['AdminAccessProtocolList']['AdminAccessProtocol'][3]['portNo']
+        rtsp_url = f'rtsp://{self.user}:{self.paswd}@{self.ip_address}:{rtsp_port}/h264/ch01/main/av_stream'
+        return rtsp_url
 
     def set_datetime_manual(self, user_date_time):
         
@@ -104,8 +132,27 @@ class Hikvision:
     def set_datetime_by_ntp(self):
         pass
 
-    def set_motion_detector(self):
-        pass
+    def enable_motion_detector(self):
+
+        status = self.is_device_status_ok()
+        if not status:
+            raise ValueError('Error, more info in logs')
+        current_settings = xmltodict.parse(settings.md_settings)
+        current_settings['MotionDetection']['enabled'] = 'true'
+        our_settings = xmltodict.unparse(current_settings)
+        self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
+        return "Настройки успешно применены"
+    
+    def set_md_sensitivity(self, sensitivity_level):
+
+        status = self.is_device_status_ok()
+        if not status:
+            raise ValueError('Error, more info in logs')
+        current_settings = xmltodict.parse(settings.md_settings)  
+        current_settings['MotionDetection']['MotionDetectionLayout']['sensitivityLevel'] = sensitivity_level
+        our_settings = xmltodict.unparse(current_settings)
+        self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
+        return "Настройки успешно применены"
 
     def upgrade_firmware(self):
         pass
@@ -136,10 +183,6 @@ class Hikvision:
             decoded_event = event.decode('utf-8')
             if 'eventType' in decoded_event:
                 hiklogger.event_logger.info(decoded_event)
-            #if 'dateTime' or 'eventType' in decoded_event:
-               # print(decoded_event)
-            
-      
     
     def get_device_config(self):
        
@@ -167,8 +210,10 @@ class Hikvision:
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
     #print(a.set_device_settings('H.264', '1280x720', '2000'))
-    a.get_events()
+    #print(a.__dict__)
     #print(a.get_model_name())
     #print(settings.time_settings)
-    #print(a.set_network_settings('172.16.13.70','255.255.255.0', '172.16.13.1', '8.8.8.8'))
-    #print(a.get_device_capabilities())
+    #print(a.set_network_settings('172.16.13.70','255.255.255.0', '172.16.13.1', '88.8.8.8'))
+    #print(a.get_rtsp_url())
+    a.enable_motion_detector()
+    #print(a.set_md_sensitivity(44))
