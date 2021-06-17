@@ -2,6 +2,7 @@ import requests
 from requests.auth import HTTPDigestAuth
 import xmltodict
 from http import HTTPStatus
+import time
 
 import const
 import settings
@@ -16,7 +17,7 @@ class Hikvision:
         self.paswd = paswd
         self.port = port
         self.HOST = f'http://{self.ip_address}:{self.port}/ISAPI'
-    
+
     def __repr__(self):
         
         return f"<Device adress: {self.ip_address}, user: {self.user}, password: {self.paswd}, port: {self.port}>"
@@ -26,7 +27,21 @@ class Hikvision:
         method = getattr(requests, method) 
         incoming_request = method(f'{self.HOST}{path}', auth=HTTPDigestAuth(self.user, self.paswd), data=data, timeout=timeout, stream=stream)
         return incoming_request
+
+    def __set_md_setting(self, setting, value):
         
+        if setting == 'enable_detector':
+            current_settings = xmltodict.parse(settings.md_settings)
+            current_settings['MotionDetection']['enabled'] = value
+            our_settings = xmltodict.unparse(current_settings)
+            self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
+        
+        elif setting == 'detector sensivity':
+            current_settings = xmltodict.parse(settings.md_settings)  
+            current_settings['MotionDetection']['MotionDetectionLayout']['sensitivityLevel'] = value
+            our_settings = xmltodict.unparse(current_settings)
+            self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
+       
     def is_device_status_ok(self):
         
         device_status = self.__send_request('get', '/System/status').status_code
@@ -89,11 +104,11 @@ class Hikvision:
             raise ValueError('Error, more info in logs')
         network_settings = xmltodict.parse(self.__send_request('get', '/System/Network/interfaces/1/ipAddress').text)
         inside_network_settings = network_settings['IPAddress']
-        ip_adress = inside_network_settings['ipAddress']
-        mask = inside_network_settings['subnetMask']
-        gateway = inside_network_settings['DefaultGateway']['ipAddress'] 
-        primary_dns = inside_network_settings['PrimaryDNS']['ipAddress']
-        return {'ip': ip_adress, 'mask': mask, 'gateway': gateway, 'primary_dns': primary_dns}
+        return {'ip': inside_network_settings['ipAddress'], 
+                'mask': inside_network_settings['subnetMask'], 
+                'gateway': inside_network_settings['DefaultGateway']['ipAddress'], 
+                'primary_dns': inside_network_settings['PrimaryDNS']['ipAddress']
+                }
 
     def set_network_settings(self, ip_adress, mask, gateway, dns):
         status = self.is_device_status_ok()
@@ -132,27 +147,19 @@ class Hikvision:
     def set_datetime_by_ntp(self):
         pass
 
-    def enable_motion_detector(self):
+    def enable_motion_detector(self, value):
 
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')
-        current_settings = xmltodict.parse(settings.md_settings)
-        current_settings['MotionDetection']['enabled'] = 'true'
-        our_settings = xmltodict.unparse(current_settings)
-        self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
-        return "Настройки успешно применены"
+        return self.__set_md_setting('enable_detector', value)  # value true = enabale, false = disable
     
     def set_md_sensitivity(self, sensitivity_level):
 
         status = self.is_device_status_ok()
         if not status:
             raise ValueError('Error, more info in logs')
-        current_settings = xmltodict.parse(settings.md_settings)  
-        current_settings['MotionDetection']['MotionDetectionLayout']['sensitivityLevel'] = sensitivity_level
-        our_settings = xmltodict.unparse(current_settings)
-        self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
-        return "Настройки успешно применены"
+        return self.__set_md_setting('detector sensivity', sensitivity_level)
 
     def upgrade_firmware(self):
         pass
@@ -181,9 +188,41 @@ class Hikvision:
         events = self.__send_request('get', '/Event/notification/alertStream', stream=True)
         for event in events.iter_lines():
             decoded_event = event.decode('utf-8')
-            if 'eventType' in decoded_event:
-                hiklogger.event_logger.info(decoded_event)
-    
+            if "Motion alarm" in decoded_event:
+                current_time = time.time()
+                yield current_time
+                
+                #current_event_time = last_event_time - time.time()
+                #delta = current_event_time - last_event_time
+                #print(delta)
+
+                #for alarm in decoded_event:
+                    #event_dublicate = True
+
+            
+                   # elif ("Motion alarm" in decoded_event) and (event_dublicate == True):
+                    #    continue
+
+                 #   else:
+                         
+                    #    print("Motion alarm stop")
+                    #    event_dublicate = False
+                #hiklogger.event_logger.info("Motion alarm detect")
+                
+            #print("Motion alarm stop")
+                                    #hiklogger.event_logger.info("Motion alarm stop")
+                   # print("Motion alarm stop")
+    def get_last_event(self):
+        times = self.get_events()
+        current_time = time.time()
+        l = []
+        for i in times:
+            while i - current_time > 5:
+                l.append(i)
+        return l
+        
+
+
     def get_device_config(self):
        
         status = self.is_device_status_ok()
@@ -214,6 +253,11 @@ if __name__ == "__main__":
     #print(a.get_model_name())
     #print(settings.time_settings)
     #print(a.set_network_settings('172.16.13.70','255.255.255.0', '172.16.13.1', '88.8.8.8'))
+    #gget = a.get_events()
+    #for event in gget:
+    #    print(event[1])
     #print(a.get_rtsp_url())
-    a.enable_motion_detector()
-    #print(a.set_md_sensitivity(44))
+    #a.enable_motion_detector()
+    #a.enable_motion_detector()
+    #a.set_md_sensitivity(44)
+    a.get_last_event()
