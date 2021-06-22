@@ -3,10 +3,12 @@ from requests.auth import HTTPDigestAuth
 import xmltodict
 from http import HTTPStatus
 import time
+import sqlite3
 
 import const
 import settings
 import hiklogger
+import hikdb
 
 class Hikvision:
 
@@ -186,11 +188,23 @@ class Hikvision:
         if not status:
             raise ValueError('Error, more info in logs')   
         events = self.__send_request('get', '/Event/notification/alertStream', stream=True)
+        last_event_time = 0
         for event in events.iter_lines():
             decoded_event = event.decode('utf-8')
             if "Motion alarm" in decoded_event:
-                current_time = time.time()
-                yield current_time
+                first_event_time = time.time()  
+                delay = first_event_time - last_event_time # 1624022556
+                if delay > 5:
+                    print("Motion alarm")
+                    hiklogger.event_logger.info("Motion alarm detect")
+                    hikdb.add_events('hik.db', self.get_model_name(), "Motion alarm" )
+                    last_event_time = first_event_time
+                else:
+                    continue
+                        
+            
+
+                
                 
                 #current_event_time = last_event_time - time.time()
                 #delta = current_event_time - last_event_time
@@ -212,14 +226,14 @@ class Hikvision:
             #print("Motion alarm stop")
                                     #hiklogger.event_logger.info("Motion alarm stop")
                    # print("Motion alarm stop")
-    def get_last_event(self):
-        times = self.get_events()
-        current_time = time.time()
-        l = []
-        for i in times:
-            while i - current_time > 5:
-                l.append(i)
-        return l
+    #def get_last_event(self):
+        #times = self.get_events()
+        #current_time = time.time()
+        #l = []
+        #for i in times:
+            #while i - current_time > 5:
+               # l.append(i)
+        #return l
         
 
 
@@ -245,6 +259,8 @@ class Hikvision:
     def get_screenshot(self):
         pass
 
+    def create_db(self, name):
+        pass
 
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
@@ -260,4 +276,5 @@ if __name__ == "__main__":
     #a.enable_motion_detector()
     #a.enable_motion_detector()
     #a.set_md_sensitivity(44)
-    a.get_last_event()
+    a.get_events()
+   
