@@ -201,41 +201,6 @@ class Hikvision:
                     last_event_time = first_event_time
                 else:
                     continue
-                        
-            
-
-                
-                
-                #current_event_time = last_event_time - time.time()
-                #delta = current_event_time - last_event_time
-                #print(delta)
-
-                #for alarm in decoded_event:
-                    #event_dublicate = True
-
-            
-                   # elif ("Motion alarm" in decoded_event) and (event_dublicate == True):
-                    #    continue
-
-                 #   else:
-                         
-                    #    print("Motion alarm stop")
-                    #    event_dublicate = False
-                #hiklogger.event_logger.info("Motion alarm detect")
-                
-            #print("Motion alarm stop")
-                                    #hiklogger.event_logger.info("Motion alarm stop")
-                   # print("Motion alarm stop")
-    #def get_last_event(self):
-        #times = self.get_events()
-        #current_time = time.time()
-        #l = []
-        #for i in times:
-            #while i - current_time > 5:
-               # l.append(i)
-        #return l
-        
-
 
     def get_device_config(self):
        
