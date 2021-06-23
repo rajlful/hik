@@ -36,13 +36,13 @@ class Hikvision:
             current_settings = xmltodict.parse(settings.md_settings)
             current_settings['MotionDetection']['enabled'] = value
             our_settings = xmltodict.unparse(current_settings)
-            self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
         
         elif setting == 'detector sensivity':
             current_settings = xmltodict.parse(settings.md_settings)  
             current_settings['MotionDetection']['MotionDetectionLayout']['sensitivityLevel'] = value
             our_settings = xmltodict.unparse(current_settings)
-            self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
+        
+        self.__send_request('put', '/System/Video/inputs/channels/1/motionDetection', data=our_settings)
        
     def is_device_status_ok(self):
         
@@ -238,17 +238,5 @@ class Hikvision:
 
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
-    #print(a.set_device_settings('H.264', '1280x720', '2000'))
-    #print(a.__dict__)
-    #print(a.get_model_name())
-    #print(settings.time_settings)
-    #print(a.set_network_settings('172.16.13.70','255.255.255.0', '172.16.13.1', '88.8.8.8'))
-    #gget = a.get_events()
-    #for event in gget:
-    #    print(event[1])
-    #print(a.get_rtsp_url())
-    #a.enable_motion_detector()
-    #a.enable_motion_detector()
-    #a.set_md_sensitivity(44)
-    a.get_events()
+    
    
