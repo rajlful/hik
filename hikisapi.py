@@ -8,7 +8,7 @@ import sqlite3
 import const
 import settings
 import hiklogger
-import hikdb
+from hikdb import Hikdb
 
 class Hikvision:
 
@@ -188,19 +188,28 @@ class Hikvision:
         if not status:
             raise ValueError('Error, more info in logs')   
         events = self.__send_request('get', '/Event/notification/alertStream', stream=True)
+        adder_to_db = Hikdb('hik.db')
         last_event_time = 0
         for event in events.iter_lines():
             decoded_event = event.decode('utf-8')
             if "Motion alarm" in decoded_event:
                 first_event_time = time.time()  
                 delay = first_event_time - last_event_time # 1624022556
-                if delay > 5:
+                if delay > 4:
                     print("Motion alarm")
                     hiklogger.event_logger.info("Motion alarm detect")
-                    hikdb.add_events('hik.db', self.get_model_name(), "Motion alarm" )
+                    adder_to_db.add_events('hik.db', self.get_model_name(), "Motion alarm" )
                     last_event_time = first_event_time
                 else:
-                    continue
+                    continue    
+            else:
+                current_time = time.time()
+                delay = current_time - last_event_time
+                if delay > 4 and last_event_time !=0:
+                    print("Motion stopped")
+                    hiklogger.event_logger.info("Motion stopped")
+                    adder_to_db.add_events('hik.db', self.get_model_name(), "Motion stopped" )
+                    last_event_time = 0
 
     def get_device_config(self):
        
