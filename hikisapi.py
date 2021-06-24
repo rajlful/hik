@@ -195,20 +195,20 @@ class Hikvision:
             if "Motion alarm" in decoded_event:
                 first_event_time = time.time()  
                 delay = first_event_time - last_event_time # 1624022556
-                if delay > 4:
+                if delay > const.DELAY_BETWEEN_EVENTS:
                     print("Motion alarm")
                     hiklogger.event_logger.info("Motion alarm detect")
-                    adder_to_db.add_events('hik.db', self.get_model_name(), "Motion alarm" )
+                    adder_to_db.add_events(self.get_model_name(), "Motion alarm" )
                     last_event_time = first_event_time
                 else:
                     continue    
             else:
                 current_time = time.time()
                 delay = current_time - last_event_time
-                if delay > 4 and last_event_time !=0:
+                if delay > const.DELAY_BETWEEN_EVENTS and last_event_time !=0:
                     print("Motion stopped")
                     hiklogger.event_logger.info("Motion stopped")
-                    adder_to_db.add_events('hik.db', self.get_model_name(), "Motion stopped" )
+                    adder_to_db.add_events(self.get_model_name(), "Motion stopped" )
                     last_event_time = 0
 
     def get_device_config(self):
@@ -238,5 +238,5 @@ class Hikvision:
 
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
-    
+    a.get_events()
    
