@@ -2,20 +2,29 @@ from tkinter import *
 
 from hikisapi import Hikvision
 
+class Main_window(Tk):
+
+    def __init__(self):
+        
+        super().__init__()
+        self.main_window = Tk()
+        self.main_window.title("HIKVISION VMS")
+        self.main_window.geometry('1100x700')
+
+        self.cameras_list = Listbox(self.main_window, width=23, height=20)
+        self.cameras_list.place(x=0, y=30)
+
+        self.add_device_btn = Button(self.main_window, text="Add device", command=add_device_window)
+        self.add_device_btn.place(x=0, y=1)
+
+        self.del_device_btn = Button(self.main_window, text="Delete device")
+        self.del_device_btn.place(x=75, y=1)
 
 
 
 
 
 
-
-
-
-def create_new_example(ip, port, user, password):
-    a = Hikvision(ip, port, user, password)
-
-def add_camera_to_list():
-    pass
     
 
 
@@ -52,19 +61,24 @@ def add_device_window():
     cancel_btn.place(x=160, y=140)
 
 
+#main gui start
+#main_window = Tk()
+#main_window.title("HIKVISION VMS")
+#main_window.geometry('1100x700')
 
-main_window = Tk()
-main_window.title("HIKVISION VMS")
-main_window.geometry('1100x700')
+#cameras_list = Listbox(main_window, width=23, height=20)
+#cameras_list.place(x=0, y=30)
 
-cameras_list = Listbox(main_window, width=23, height=20)
-cameras_list.place(x=0, y=30)
+#add_device_btn = Button(main_window, text="Add device", command=add_device_window)
+#add_device_btn.place(x=0, y=1)
 
-add_device_btn = Button(main_window, text="Add device", command=add_device_window)
-add_device_btn.place(x=0, y=1)
-
-del_device_btn = Button(main_window, text="Delete device")
-del_device_btn.place(x=75, y=1)
+#del_device_btn = Button(main_window, text="Delete device")
+#del_device_btn.place(x=75, y=1)
+#main gui stop 
 
 
-main_window.mainloop()
+
+
+
+a = Main_window()
+a.mainloop()
