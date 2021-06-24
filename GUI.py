@@ -64,7 +64,7 @@ class Main_window(Tk):
         self.password_lbl = Label(self.device_window, text="Password:")
         self.password_lbl.place(x=13, y=113)
 
-        self.add_btn = Button(self.device_window, text="Add device", command=self.add_device_to_list())
+        self.add_btn = Button(self.device_window, text="Add device", command=self.add_device_to_list)
         self.add_btn.place(x=80, y=140)
 
         self.cancel_btn = Button(self.device_window, text="Cancel", command=self.device_window.destroy)
