@@ -3,81 +3,62 @@ from tkinter import *
 from hikisapi import Hikvision
 
 class Main_window(Tk):
-
+    
     def __init__(self):
-        
         super().__init__()
         self.main_window = Tk()
         self.main_window.title("HIKVISION VMS")
         self.main_window.geometry('1100x700')
 
         self.cameras_list = Listbox(self.main_window, width=23, height=20)
-        self.cameras_list.place(x=0, y=30)
+        self.cameras_list.place(x=2, y=30)
+        self.cameras_list_label = Label(self.main_window, text='List of cameras', bg='white', font="Arial 8")
+        self.cameras_list_label.place(x=5, y=35)
 
-        self.add_device_btn = Button(self.main_window, text="Add device", command=add_device_window)
+        self.add_device_btn = Button(self.main_window, text="Add device", command=self.add_device_window)
         self.add_device_btn.place(x=0, y=1)
 
         self.del_device_btn = Button(self.main_window, text="Delete device")
         self.del_device_btn.place(x=75, y=1)
-
-
-
-
-
-
     
+    def add_device_window(self):
+        
+        self.remove_label()
+        self.device_window = Tk()
+        self.device_window.title("Device add")
+        self.device_window.geometry('260x180')
 
+        self.ip = Entry(self.device_window,width=15)  
+        self.ip.place(x=80, y=40)
+        self.ip_lbl = Label(self.device_window, text="IP adress:")
+        self.ip_lbl.place(x=13, y=38)
 
-def add_device_window():
-    
-    device_window = Tk()
-    device_window.title("Device add")
-    device_window.geometry('260x180')
+        self.port = Entry(self.device_window,width=3)  
+        self.port.place(x=80, y=65)
+        self.port_lbl = Label(self.device_window, text="Port:")
+        self.port_lbl.place(x=13, y=63)
 
-    ip = Entry(device_window,width=15)  
-    ip.place(x=80, y=40)
-    ip_lbl = Label(device_window, text="IP adress:")
-    ip_lbl.place(x=13, y=38)
+        self.user =  Entry(self.device_window,width=10)  
+        self.user.place(x=80, y=90)
+        self.user_lbl = Label(self.device_window, text="User:")
+        self.user_lbl.place(x=13, y=88)
 
-    port = Entry(device_window,width=3)  
-    port.place(x=80, y=65)
-    port_lbl = Label(device_window, text="Port:")
-    port_lbl.place(x=13, y=63)
+        self.password = Entry(self.device_window,width=10)  
+        self.password.place(x=80, y=115)
+        self.password_lbl = Label(self.device_window, text="Password:")
+        self.password_lbl.place(x=13, y=113)
 
-    user =  Entry(device_window,width=10)  
-    user.place(x=80, y=90)
-    user_lbl = Label(device_window, text="User:")
-    user_lbl.place(x=13, y=88)
+        self.add_btn = Button(self.device_window, text="Add device", command=self.add_device_to_list())
+        self.add_btn.place(x=80, y=140)
 
-    password = Entry(device_window,width=10)  
-    password.place(x=80, y=115)
-    password_lbl = Label(device_window, text="Password:")
-    password_lbl.place(x=13, y=113)
+        self.cancel_btn = Button(self.device_window, text="Cancel", command=self.device_window.destroy)
+        self.cancel_btn.place(x=160, y=140)
 
-    add_btn = Button(device_window, text="Add device", command=create_new_example(ip,port,user,password))
-    add_btn.place(x=80, y=140)
-
-    cancel_btn = Button(device_window, text="Cancel", command=device_window.destroy)
-    cancel_btn.place(x=160, y=140)
-
-
-#main gui start
-#main_window = Tk()
-#main_window.title("HIKVISION VMS")
-#main_window.geometry('1100x700')
-
-#cameras_list = Listbox(main_window, width=23, height=20)
-#cameras_list.place(x=0, y=30)
-
-#add_device_btn = Button(main_window, text="Add device", command=add_device_window)
-#add_device_btn.place(x=0, y=1)
-
-#del_device_btn = Button(main_window, text="Delete device")
-#del_device_btn.place(x=75, y=1)
-#main gui stop 
-
-
-
+    def add_device_to_list(self):
+        model_name = Hikvision('192.168.1.155', 'admin', 'Admin1337')
+        self.cameras_list.insert(6, model_name.get_model_name())
+    def remove_label(self):
+        self.cameras_list_label.configure(text="")
 
 
 a = Main_window()
