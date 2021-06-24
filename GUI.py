@@ -26,7 +26,7 @@ class Main_window(Tk):
         self.add_device_btn = Button(self.main_window, text="Add device", command=self.add_device_window)
         self.add_device_btn.place(x=0, y=1)
 
-        self.del_device_btn = Button(self.main_window, text="Delete device")
+        self.del_device_btn = Button(self.main_window, text="Delete device", command=self.remove_device)
         self.del_device_btn.place(x=75, y=1)
 
         self.events_btn = Button(self.main_window, width=20, height=1, text="Show events", command=self.add_motion_events)
@@ -72,7 +72,11 @@ class Main_window(Tk):
     
     def add_device_to_list(self):
         model_name = Hikvision('192.168.1.155', 'admin', 'Admin1337')
-        self.cameras_list.insert(6, model_name.get_model_name())
+        self.cameras_list.insert(0, model_name.get_model_name())
+
+    def remove_device(self):
+        self.cameras_list.delete(0)
+    
     def remove_label(self):
         self.cameras_list_label.configure(text="")
 
