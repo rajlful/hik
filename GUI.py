@@ -14,13 +14,26 @@ class Main_window(Tk):
         self.cameras_list.place(x=2, y=30)
         self.cameras_list_label = Label(self.main_window, text='List of cameras', bg='white', font="Arial 8")
         self.cameras_list_label.place(x=5, y=35)
+        self.scrollbar = Scrollbar(self.main_window)
+        self.scrollbar.config(command=self.cameras_list.yview)
+
+        self.journal_events = Listbox(self.main_window, width=23, height=18)
+        self.journal_events.place(x=2, y=385)
 
         self.add_device_btn = Button(self.main_window, text="Add device", command=self.add_device_window)
         self.add_device_btn.place(x=0, y=1)
 
         self.del_device_btn = Button(self.main_window, text="Delete device")
         self.del_device_btn.place(x=75, y=1)
-    
+
+        self.events_btn = Button(self.main_window, width=20, height=1, text="Show events")
+        self.events_btn.place(x=7, y=357)
+
+        self.player = Frame(self.main_window, bg='black',width=650, height=450)
+        self.player.place(x=175, y=5)
+        self.player_label = Label(self.main_window, text="Player will be there...", fg='red', font="Arial 23", bg='black')
+        self.player_label.place(x=350, y=250)
+        
     def add_device_window(self):
         
         self.remove_label()
@@ -53,7 +66,7 @@ class Main_window(Tk):
 
         self.cancel_btn = Button(self.device_window, text="Cancel", command=self.device_window.destroy)
         self.cancel_btn.place(x=160, y=140)
-
+    
     def add_device_to_list(self):
         model_name = Hikvision('192.168.1.155', 'admin', 'Admin1337')
         self.cameras_list.insert(6, model_name.get_model_name())
