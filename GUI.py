@@ -1,6 +1,7 @@
 from tkinter import *
 
 from hikisapi import Hikvision
+from hikdb import Hikdb
 
 class Main_window(Tk):
     
@@ -19,6 +20,8 @@ class Main_window(Tk):
 
         self.journal_events = Listbox(self.main_window, width=23, height=18)
         self.journal_events.place(x=2, y=385)
+        self.scrollbar = Scrollbar(self.main_window)
+        self.scrollbar.config(command=self.journal_events.yview)
 
         self.add_device_btn = Button(self.main_window, text="Add device", command=self.add_device_window)
         self.add_device_btn.place(x=0, y=1)
@@ -26,7 +29,7 @@ class Main_window(Tk):
         self.del_device_btn = Button(self.main_window, text="Delete device")
         self.del_device_btn.place(x=75, y=1)
 
-        self.events_btn = Button(self.main_window, width=20, height=1, text="Show events")
+        self.events_btn = Button(self.main_window, width=20, height=1, text="Show events", command=self.add_motion_events)
         self.events_btn.place(x=7, y=357)
 
         self.player = Frame(self.main_window, bg='black',width=650, height=450)
@@ -72,6 +75,10 @@ class Main_window(Tk):
         self.cameras_list.insert(6, model_name.get_model_name())
     def remove_label(self):
         self.cameras_list_label.configure(text="")
+
+    def add_motion_events(self):
+        events = Hikdb('hik.db')
+        self.journal_events.insert(0, *events.show_events())
 
 
 a = Main_window()
