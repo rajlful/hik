@@ -71,7 +71,7 @@ class Main_window(Tk):
         self.cancel_btn.place(x=160, y=140)
     
     def add_device_to_list(self):
-        model_name = Hikvision('192.168.1.155', 'admin', 'Admin1337')
+        model_name = Hikvision(self.ip.get(), self.user.get(), self.password.get(), self.port.get())
         self.cameras_list.insert(0, model_name.get_model_name())
 
     def remove_device(self):
