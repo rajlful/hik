@@ -3,7 +3,7 @@ from tkinter import *
 from hikisapi import Hikvision
 from hikdb import Hikdb
 
-class Main_window(Tk):
+class MainWindow(Tk):
     
     def __init__(self):
         super().__init__()
@@ -93,9 +93,9 @@ class Main_window(Tk):
         self.md_window.geometry('260x180')
         self.enable_md_checkbutton = Checkbutton(text="Enable detector")
         self.enable_md_checkbutton.pack(anchor=CENTER)
-        self.sensivity_scale = Scale(self.md_window, orient=HORIZONTAL, state=50)
+        self.sensivity_scale = Scale(self.md_window, orient=HORIZONTAL)
         self.sensivity_scale.place(x=70, y=20)
 
 
-a = Main_window()
+a = MainWindow()
 a.mainloop()
