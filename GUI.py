@@ -32,6 +32,9 @@ class Main_window(Tk):
         self.events_btn = Button(self.main_window, width=20, height=1, text="Show events", command=self.add_motion_events)
         self.events_btn.place(x=7, y=357)
 
+        self.motion_detector_btn = Button(self.main_window, text="Motion detector", command=self.md_setting)
+        self.motion_detector_btn.place(x=175, y=457)
+
         self.player = Frame(self.main_window, bg='black',width=650, height=450)
         self.player.place(x=175, y=5)
         self.player_label = Label(self.main_window, text="Player will be there...", fg='red', font="Arial 23", bg='black')
@@ -83,6 +86,15 @@ class Main_window(Tk):
     def add_motion_events(self):
         events = Hikdb('hik.db')
         self.journal_events.insert(0, *events.show_events())
+
+    def md_setting(self):
+        self.md_window = Tk()
+        self.md_window.title("Motion detector")
+        self.md_window.geometry('260x180')
+        self.enable_md_checkbutton = Checkbutton(text="Enable detector")
+        self.enable_md_checkbutton.pack(anchor=CENTER)
+        self.sensivity_scale = Scale(self.md_window, orient=HORIZONTAL, state=50)
+        self.sensivity_scale.place(x=70, y=20)
 
 
 a = Main_window()
