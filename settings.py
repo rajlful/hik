@@ -1,8 +1,14 @@
-ipaddr='192.168.1.155'
+ipaddr='172.16.13.202'
 user='admin' 
 paswd='Admin1337' 
 port=80
 
+image_settings = '''<?xml version="1.0" encoding="UTF-8"?><Color>
+<brightnessLevel>50</brightnessLevel>
+<contrastLevel>50</contrastLevel>
+<saturationLevel>50</saturationLevel>
+<grayScale><grayScaleMode>outdoor</grayScaleMode></grayScale></Color>
+'''
 device_settings = """ 
 <StreamingChannel>
 <id>101</id>

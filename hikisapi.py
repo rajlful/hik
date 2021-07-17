@@ -4,6 +4,7 @@ import xmltodict
 from http import HTTPStatus
 import time
 import sqlite3
+import datetime
 
 import const
 import settings
@@ -97,9 +98,18 @@ class Hikvision:
         self.__send_request('put', f'/Streaming/channels/{stream}/', our_settings)
         return 'Настройки успешно применились'
         
-    def set_image_settings(self):
-        pass
-    
+    def set_image_settings(self, brightnesslevel, contrastlevel, saturationlevel):
+        status = self.is_device_status_ok()
+        if not status:
+            raise ValueError('Error, more info in logs')
+        default_settings = xmltodict.parse(settings.image_settings)
+        default_settings['Color']['brightnessLevel'] = brightnesslevel
+        default_settings['Color']['contrastLevel'] = contrastlevel
+        default_settings['Color']['saturationLevel'] = saturationlevel
+        our_settings = xmltodict.unparse(default_settings)
+        self.__send_request('put', f'/Image/channels/1/color', our_settings)
+        return 'Настройки успешно применились'
+
     def get_network_settings(self):
         status = self.is_device_status_ok()
         if not status:
@@ -198,7 +208,8 @@ class Hikvision:
                 if delay > const.DELAY_BETWEEN_EVENTS:
                     print("Motion alarm")
                     hiklogger.event_logger.info("Motion alarm detect")
-                    adder_to_db.add_events(self.get_model_name(), "Motion alarm" )
+                    event_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    adder_to_db.add_events(event_time,self.get_model_name(), "Motion alarm" )
                     last_event_time = first_event_time
                 else:
                     continue    
@@ -208,7 +219,8 @@ class Hikvision:
                 if delay > const.DELAY_BETWEEN_EVENTS and last_event_time !=0:
                     print("Motion stopped")
                     hiklogger.event_logger.info("Motion stopped")
-                    adder_to_db.add_events(self.get_model_name(), "Motion stopped" )
+                    
+                    adder_to_db.add_events(event_time, self.get_model_name(), "Motion stopped" )
                     last_event_time = 0
 
     def get_device_config(self):
@@ -238,5 +250,5 @@ class Hikvision:
 
 if __name__ == "__main__":
     a = Hikvision(settings.ipaddr, settings.user, settings.paswd)
-    a.get_events()
-   
+    cap = a.get_events()
+    
